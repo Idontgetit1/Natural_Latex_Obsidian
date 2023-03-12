@@ -1,85 +1,43 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, MarkdownView, Modal, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from "obsidian";
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
+interface NaturalLatexSettings {
+	openaiApiKey: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: NaturalLatexSettings = {
+	openaiApiKey: "",
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+
+export default class NaturalLatex extends Plugin {
+	settings: NaturalLatexSettings;
 
 	async onload() {
+		console.log("loading plugin: Natural Latex");
+
 		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
+			id: "natural-latex",
+			name: "Natural Latex",
 			checkCallback: (checking: boolean) => {
-				// Conditions to check
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+
 				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
 					if (!checking) {
-						new SampleModal(this.app).open();
+						new NaturalLatexModal(this.app, markdownView, this.settings).open();
 					}
 
-					// This command will only show up in Command Palette when the check function returns true
 					return true;
 				}
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
 
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		this.addSettingTab(new NaturalLatexSettingsTab(this.app, this));
 	}
 
 	onunload() {
-
+		console.log("unloading plugin: Natural Latex");
 	}
 
 	async loadSettings() {
@@ -91,46 +49,97 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
+// modal 
+class NaturalLatexModal extends Modal {
+	markdownView: MarkdownView;
+	openai: string;
+	constructor(app: App, markdownView: MarkdownView, settings: NaturalLatexSettings) {
 		super(app);
+		this.markdownView = markdownView;
+		this.openai = settings.openaiApiKey;
 	}
 
 	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
+		let {contentEl} = this;
+		contentEl.setText("Enter your text here.");
+
+		let inputEl = contentEl.createEl('textarea', {
+			cls: 'mod-input',
+			attr: {
+				'rows': '10',
+				'cols': '50',
+			}
+		});
+
+		let buttonEl = contentEl.createEl('button', {
+			text: 'Generate Latex',
+			cls: 'mod-cta',
+		});
+
+		buttonEl.addEventListener('click', async () => {
+
+			const requestOptions = {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + this.openai,
+				},
+				body: JSON.stringify({
+					"model": "gpt-3.5-turbo",
+					"messages": [
+						{ role: "system", content: "You are a large language model that translates natural language to LaTeX code. Answer as concisely as possible."},
+						{ role: "system", content: "The answer should only contain the Latex code in this format: $<code>$."},
+						{ role: "user", content: "Translate the following to LaTeX code: sum from 0 to k of x squared"},
+						{ role: "assistant", content: "$\sum\limits_{i=0}^{k} x^2$" },
+						{ role: "user", content: "Translate the following to LaTeX code: " + inputEl.value },
+					],
+					"temperature": 0.7,
+				})
+			};
+
+			fetch('https://api.openai.com/v1/chat/completions', requestOptions)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data);
+					this.markdownView.editor.replaceSelection(data.choices[0].message.content);
+				}).catch(error => {
+					console.log(error);
+				});
+
+			this.close();
+		});
 	}
 
 	onClose() {
-		const {contentEl} = this;
+		let {contentEl} = this;
 		contentEl.empty();
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+class NaturalLatexSettingsTab extends PluginSettingTab {
+	plugin: NaturalLatex;
+
+	constructor(app: App, plugin: NaturalLatex) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		let {containerEl} = this;
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h2', {text: 'Settings for Natural Latex.'});
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('OpenAI API Key')
+			.setDesc('Your OpenAI API key.')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('OpenAI API Key')
+				.setValue(this.plugin.settings.openaiApiKey)
 				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.openaiApiKey = value;
 					await this.plugin.saveSettings();
 				}));
 	}
