@@ -3,6 +3,7 @@
 Adds a new command allowing translation of natural language to Latex expressions.
 
 # Demo
+![basic usage](https://github.com/Idontgetit1/Natural_Latex_Obsidian/blob/1cf0aa487aeee71922fd5543a8373a35f9ef30f5/resources/screenshots/NaturalLatexDemo1.gif)
 
 # How to use
 
