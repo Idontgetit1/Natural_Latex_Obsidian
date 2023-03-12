@@ -10,8 +10,7 @@ Open command palette (ctrl+p) and run command "Natural Latex", then enter your p
 Press "Generate Latex" to generate Latex expression at you current cursor location.
 
 # How to Install
-
-## Inside Obsidian
+### Inside Obsidian
 - Open Settings and go to Third-party plugins
 - Make sure that Safe mode is **off**
 - Click "Browse community plugins"

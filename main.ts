@@ -100,7 +100,7 @@ class NaturalLatexModal extends Modal {
 						{ role: "system", content: "You are a large language model that translates natural language to LaTeX code. Answer as concisely as possible."},
 						{ role: "system", content: "The answer should only contain the Latex code in this format: $<code>$."},
 						{ role: "user", content: "Translate the following to LaTeX code: sum from 0 to k of x squared"},
-						{ role: "assistant", content: "$\sum\limits_{i=0}^{k} x^2$" },
+						{ role: "assistant", content: "$\\sum\\limits_{i=0}^{k} x^2$" },
 						{ role: "user", content: "Translate the following to LaTeX code: " + inputEl.value },
 					],
 					"temperature": 0.7,
