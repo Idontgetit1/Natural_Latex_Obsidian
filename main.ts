@@ -61,7 +61,12 @@ class NaturalLatexModal extends Modal {
 
 	onOpen() {
 		let {contentEl} = this;
-		contentEl.setText("Enter your text here.");
+		contentEl.setText('Natural Latex');
+
+		// spacer
+		contentEl.createEl('div', {
+			cls: 'mod-spacer',
+		});
 
 		let inputEl = contentEl.createEl('textarea', {
 			cls: 'mod-input',
@@ -69,6 +74,11 @@ class NaturalLatexModal extends Modal {
 				'rows': '10',
 				'cols': '50',
 			}
+		});
+
+		// spacer
+		contentEl.createEl('div', {
+			cls: 'mod-spacer',
 		});
 
 		let buttonEl = contentEl.createEl('button', {
