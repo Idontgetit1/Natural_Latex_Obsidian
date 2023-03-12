@@ -19,6 +19,9 @@ Press "Generate Latex" to generate Latex expression at you current cursor locati
 - Install
 - Close Community plugins window and activate Natural Latex plugin
 
+- To use you need a openAI api key (get one [here](https://platform.openai.com/account/api-keys))
+- Enter your key in the plugin Settings
+
 
 # Notes
 Sometimes generated Latex can contain errors such as white spaces between the "$" and the actual expression or a missing "\".
